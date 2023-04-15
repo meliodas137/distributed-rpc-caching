@@ -49,13 +49,18 @@ class MysteryMachine:
         n = len(self.components)
         nodeAdded = np.zeros(n, dtype=int)
         for i in range(n):
+            nodeAdded[i] = 1
             for j in range(n):
+                currentPath = [i]
                 if self.causalGraph[i][j] == 1:
-                    nodeAdded[i] = 1
-                    self.__explorePaths([i], j, n, nodeAdded)
+                    currentPath.append(j)
+                    nodeAdded[j] = 1
+                    self.__explorePaths(currentPath, j, n, nodeAdded)
             nodeAdded[i] = 0
         
         self.__printPaths()
+        print("Filtered Paths:")
+        self.__filterPaths()
 
     def __explorePaths(self, currentPath, currentIndex, maxIndex, nodeAdded):
         notLeaf = False
@@ -72,8 +77,28 @@ class MysteryMachine:
         
         nodeAdded[currentIndex] = 0
         currentPath.pop()
+
+    def __filterPaths(self):
+        filterPaths = []
+        for path in self.causalPaths:
+            score = self.__getPathScore(path)
+            if score > 0:
+                filterPaths.append(path)
+            else:
+                print("Filtered: " + str(path))
+        self.causalPaths = filterPaths
+        self.__printPaths()
+    
+    def __getPathScore(self, path):
+        count = 0
+        for index in range(len(path) - 1):
+            if self.observationGraph[path[index]][path[index+1]] > 0:
+                count += self.observationGraph[path[index]][path[index+1]]
+        return count
+
     
     def __printPaths(self):
+        print(len(self.causalPaths))
         for path in self.causalPaths:
             print(self.__getLabelledPath(path))
     
@@ -81,4 +106,6 @@ class MysteryMachine:
         pathString = ""
         for node in path:
             pathString = pathString + self.componentIdToLabelMap[node] + " -> "
-        return pathString[:-3]
+            # pathString = pathString + str(node) + " -> "
+        pathString = pathString + str(self.__getPathScore(path))
+        return pathString
