@@ -26,7 +26,7 @@ module.exports = (serviceName) => {
   } else if(EXPORTER.toLowerCase().startsWith('j')) {
     exporter = new JaegerExporter();
   } else {
-    exporter = new FileTraceExporter({ filePath: "./logs/trace.json" });
+    exporter = new FileTraceExporter({ filePath: "./logs/trace_full.json" });
   }
 
   provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
