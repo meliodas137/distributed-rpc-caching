@@ -1,7 +1,5 @@
 'use strict';
 
-const api = require('@opentelemetry/api');
-const tracer = require('./tracer')('example-http-server');
 const http = require('http');
 
 /** Starts a HTTP server that receives requests on sample server port. */
@@ -19,27 +17,58 @@ function startServer(port) {
 
 /** A function which handles requests and send response. */
 function handleRequest(request, response) {
-  const currentSpan = api.trace.getActiveSpan();
-  // display traceid in the terminal
-  const traceId = currentSpan.spanContext().traceId;
-  console.log(`traceId: ${traceId}`);
-  const span = tracer.startSpan('handleRequest', {
-    kind: 1, // server
-    attributes: { key: 'value' },
-  });
-  // Annotate our span to capture metadata about the operation
-  span.addEvent('invoking handleRequest');
-
+  console.log("Request", request.url);
   const body = [];
   request.on('error', (err) => console.log(err));
   request.on('data', (chunk) => body.push(chunk));
+  switch(request.url){
+    case '/s1':
+      s1(request, response);
+      break;
+    case '/s2':
+      s2(request, response);
+      break;
+    case '/s3':
+      s3(request, response);
+      break;
+    default:
+      defaultResponse(request, response);
+  }
+}
+
+function s1(request, response){
   request.on('end', () => {
-    // deliberately sleeping to mock some action.
     setTimeout(() => {
-      span.setAttribute("Body", decodeURIComponent('This is body data'));
-      span.end();
-      response.end('Hello World!');
-    }, 2000);
+      response.write('s1');
+      response.end();
+    }, 500 );
+  });
+}
+
+function s2(request, response){
+  request.on('end', () => {
+    setTimeout(() => {
+      response.write('s2');
+      response.end();
+    }, 300);
+  });
+}
+
+function s3(request, response){
+  request.on('end', () => {
+    setTimeout(() => {
+      response.write('s3');
+      response.end();
+    }, 200);
+  });
+}
+
+function defaultResponse(request, response){
+  request.on('end', () => {
+    setTimeout(() => {
+      response.write('No matching service!');
+      response.end();
+    }, 200);
   });
 }
 
