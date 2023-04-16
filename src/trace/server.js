@@ -39,7 +39,8 @@ function handleRequest(request, response) {
 function s1(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s1');
+      const rand = Math.floor(Math.random()*10000);
+      response.write('s1 random output ' + rand);
       response.end();
     }, 100 );
   });
@@ -48,7 +49,8 @@ function s1(request, response){
 function s2(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s2');
+      const config = 'fixed config'
+      response.write('s2 ' + config);
       response.end();
     }, 100);
   });
@@ -57,7 +59,8 @@ function s2(request, response){
 function s3(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s3');
+      const rand = Math.floor(Math.random()*10000);
+      response.write('s3 random output ' + rand);
       response.end();
     }, 100);
   });
