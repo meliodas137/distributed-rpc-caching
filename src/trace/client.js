@@ -26,10 +26,14 @@ function makeRequest(url = '') {
   });
 }
 
-makeRequest('/s1');
-makeRequest('/s2');
-makeRequest('/s3');
-makeRequest();
+function loopRequests(loop = 1){
+  for(var i = 0; i < loop; i+=1){
+    console.log('Sleeping 1 seconds after every request');
+    setTimeout(() => { makeRequest('/s1'); console.log('Completed.'); }, 1000);
+    setTimeout(() => { makeRequest('/s2'); console.log('Completed.'); }, 2000);
+    setTimeout(() => { makeRequest('/s1'); console.log('Completed.'); }, 3000);
+    setTimeout(() => { makeRequest(); console.log('Completed.'); }, 4000);
+  }
+}
 
-console.log('Sleeping 5 seconds before shutdown to ensure all records are flushed.');
-setTimeout(() => { console.log('Completed.'); }, 5000);
+loopRequests();

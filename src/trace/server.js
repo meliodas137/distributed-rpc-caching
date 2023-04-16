@@ -41,7 +41,7 @@ function s1(request, response){
     setTimeout(() => {
       response.write('s1');
       response.end();
-    }, 500 );
+    }, 100 );
   });
 }
 
@@ -50,7 +50,7 @@ function s2(request, response){
     setTimeout(() => {
       response.write('s2');
       response.end();
-    }, 300);
+    }, 100);
   });
 }
 
@@ -59,7 +59,7 @@ function s3(request, response){
     setTimeout(() => {
       response.write('s3');
       response.end();
-    }, 200);
+    }, 100);
   });
 }
 
@@ -68,7 +68,7 @@ function defaultResponse(request, response){
     setTimeout(() => {
       response.write('No matching service!');
       response.end();
-    }, 200);
+    }, 100);
   });
 }
 
