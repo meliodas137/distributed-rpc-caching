@@ -9,8 +9,7 @@
     "zipkin:client": "cross-env EXPORTER=zipkin node ./client.js",
     "jaeger:server": "cross-env EXPORTER=jaeger node ./server.js",
     "jaeger:client": "cross-env EXPORTER=jaeger node ./client.js",
-    "server": "node ./server.js",
-    "client": "node ./client.js"
+    "generate_traces": "node ./microservice_c.js ./microservice_b.js ./microservice_a.js"
   },
   "repository": {
     "type": "git",
