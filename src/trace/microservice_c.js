@@ -22,27 +22,18 @@ function handleRequest(request, response) {
   request.on('error', (err) => console.log(err));
   request.on('data', (chunk) => body.push(chunk));
   switch(request.url){
-    case '/s4':
-      s4(request, response);
-      break;
     case '/s5':
       s5(request, response);
       break;
     case '/s6':
       s6(request, response);
       break;
+    case '/s7':
+      s7(request, response);
+      break;
     default:
       defaultResponse(request, response);
   }
-}
-
-function s4(request, response){
-  request.on('end', () => {
-    setTimeout(() => {
-      response.write('s4');
-      response.end();
-    }, 100 );
-  });
 }
 
 function s5(request, response){
@@ -50,7 +41,7 @@ function s5(request, response){
     setTimeout(() => {
       response.write('s5');
       response.end();
-    }, 100);
+    }, 200 );
   });
 }
 
@@ -59,7 +50,17 @@ function s6(request, response){
     setTimeout(() => {
       response.write('s6');
       response.end();
-    }, 100);
+    }, 200);
+  });
+}
+
+function s7(request, response){
+  request.on('end', () => {
+    setTimeout(() => {
+      const rand = Math.floor(Math.random()*10000);
+      response.write('s7 ' + rand);
+      response.end();
+    }, 200);
   });
 }
 
@@ -68,7 +69,7 @@ function defaultResponse(request, response){
     setTimeout(() => {
       response.write('No matching service!');
       response.end();
-    }, 100);
+    }, 200);
   });
 }
 
