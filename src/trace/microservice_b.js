@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const tracer = require('./tracer')('microservice_b');
 
 /** Starts a HTTP server that receives requests on sample server port. */
 function startServer(port) {
@@ -39,9 +40,24 @@ function handleRequest(request, response) {
 function s1(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      const rand = Math.floor(Math.random()*10000);
-      response.write('s1 random output ' + rand);
-      response.end();
+      tracer.startActiveSpan('s1_request', (span) => {
+        http.get({
+          host: 'localhost',
+          port: 8081,
+          path: '/s4',
+        }, (res) => {
+          const body = [];
+          res.on('data', (chunk) => body.push(chunk));
+          res.on('end', () => {
+            span.setAttribute("service.output", decodeURIComponent(body.toString()));
+            console.log(body.toString());
+            const rand = Math.floor(Math.random()*10000);
+            response.write('s1 random output ' + rand + ' ' + decodeURIComponent(body.toString()));
+            response.end();
+            span.end();
+          });  
+        });
+      });
     }, 100 );
   });
 }

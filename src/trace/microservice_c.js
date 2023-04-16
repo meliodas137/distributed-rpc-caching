@@ -22,42 +22,42 @@ function handleRequest(request, response) {
   request.on('error', (err) => console.log(err));
   request.on('data', (chunk) => body.push(chunk));
   switch(request.url){
-    case '/s1':
-      s1(request, response);
+    case '/s4':
+      s4(request, response);
       break;
-    case '/s2':
-      s2(request, response);
+    case '/s5':
+      s5(request, response);
       break;
-    case '/s3':
-      s3(request, response);
+    case '/s6':
+      s6(request, response);
       break;
     default:
       defaultResponse(request, response);
   }
 }
 
-function s1(request, response){
+function s4(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s1');
+      response.write('s4');
       response.end();
     }, 100 );
   });
 }
 
-function s2(request, response){
+function s5(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s2');
+      response.write('s5');
       response.end();
     }, 100);
   });
 }
 
-function s3(request, response){
+function s6(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s3');
+      response.write('s6');
       response.end();
     }, 100);
   });
