@@ -1,2 +1,2 @@
-# distributed-rpc-caching
-A proof-of-concept of a generalised RPC level caching in a distributed system using traces
+# Distributed RPC Caching
+A proof-of-concept of a generalised RPC level caching in a distributed system using traces. A distributed systems ocassionaly collect traces along with different metrics. If the logs/traces contain all the input and output parameters of the RPC calls, we can then potentially spot the deterministic calls. These RPC calls can then be cached for future invocations. Refreshing a cached value is based on a timer which can be manipulated manually. In the POC, we have created a sample JavaScript app to generate relevant traces.
