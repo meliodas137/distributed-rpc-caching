@@ -1,9 +1,8 @@
-import numpy as np
+import sys
+sys.path.append('../')
 
-class Instruction:
-        def __init__(self, callee, caller):
-            self.callee = callee
-            self.caller = caller
+import numpy as np
+from parser.data_struct import Instruction
 
 class MysteryMachine:
 
