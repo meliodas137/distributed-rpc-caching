@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const tracer = require('./tracer')('microservice_c');
 
 /** Starts a HTTP server that receives requests on sample server port. */
 function startServer(port) {
@@ -39,37 +40,61 @@ function handleRequest(request, response) {
 function s5(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s5');
-      response.end();
-    }, 200 );
+      tracer.startActiveSpan('s5_service', (span) => {
+        var res = 's5 ';
+        span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.parentId", request.headers['parent-id'])
+        response.write(res);
+        response.end();
+        span.end();
+      })
+    }, 50 );
   });
 }
 
 function s6(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('s6');
-      response.end();
-    }, 200);
+      tracer.startActiveSpan('s6_service', (span) => {
+        var res = 's6 ';
+        span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.parentId", request.headers['parent-id'])
+        response.write(res);
+        response.end();
+        span.end();
+      })
+    }, 50);
   });
 }
 
 function s7(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      const rand = Math.floor(Math.random()*10000);
-      response.write('s7 ' + rand);
-      response.end();
-    }, 200);
+      tracer.startActiveSpan('s7_service', (span) => {
+        const rand = Math.floor(Math.random()*20000);
+        var res = 's7 ' + rand;
+        span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.parentId", request.headers['parent-id'])
+        response.write(res);
+        response.end();
+        span.end();
+      })
+    }, 50);
   });
 }
 
 function defaultResponse(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('No matching service!');
-      response.end();
-    }, 200);
+      tracer.startActiveSpan('s7_service', (span) => {
+        var res = 'No matching service!';
+        span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.parentId", request.headers['parent-id'])
+        response.write(res);
+        response.end();
+        span.end();
+      })
+    }, 50);
   });
 }
 
