@@ -48,14 +48,18 @@ function s1(request, response){
           host: 'localhost',
           port: 8081,
           path: '/s5',
+          headers: {'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
           res.on('end', () => {
-            span.setAttribute("service.output", decodeURIComponent(body.toString()));
-            console.log(body.toString());
             const rand = Math.floor(Math.random()*10000);
-            response.write('s1 random output ' + rand + ' ' + decodeURIComponent(body.toString()));
+            var result = 's1 random output ' + rand + ' ' + decodeURIComponent(body.toString())
+
+            span.setAttribute("service.output", decodeURIComponent(result));
+            span.setAttribute("service.parentId", request.headers['parent-id'])
+            
+            response.write(result);
             response.end();
             span.end();
           });  
@@ -68,10 +72,15 @@ function s1(request, response){
 function s2(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      const config = 'fixed config'
-      response.write('s2 ' + config);
-      response.end();
-    }, 200);
+      tracer.startActiveSpan('s2_service', (span) => {
+        const config = 'fixed config'
+        var result = 's2 ' + config;
+        span.setAttribute("service.output", decodeURIComponent(result));
+        span.setAttribute("service.parentId", request.headers['parent-id'])
+        response.write(result);
+        response.end();
+        span.end();
+      })
   });
 }
 
@@ -83,14 +92,19 @@ function s3(request, response){
           host: 'localhost',
           port: 8081,
           path: '/s7',
+          headers: {'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
           res.on('end', () => {
-            span.setAttribute("service.output", decodeURIComponent(body.toString()));
-            console.log(body.toString());
+
             const rand = Math.floor(Math.random()*10000);
-            response.write('s3 random output ' + rand + ' ' + decodeURIComponent(body.toString()));
+            var result = 's3 random output ' + rand + ' ' + decodeURIComponent(body.toString());
+
+            span.setAttribute("service.output", decodeURIComponent(result));
+            span.setAttribute("service.parentId", request.headers['parent-id'])
+            
+            response.write(result);
             response.end();
             span.end();
           });  
@@ -103,19 +117,23 @@ function s3(request, response){
 function s4(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      tracer.startActiveSpan('s1_request', (span) => {
+      tracer.startActiveSpan('s4_request', (span) => {
         http.get({
           host: 'localhost',
           port: 8081,
           path: '/s6',
+          headers: {'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
           res.on('end', () => {
-            span.setAttribute("service.output", decodeURIComponent(body.toString()));
-            console.log(body.toString());
             const config = 'fixed config'
-            response.write('s4 ' + config + ' ' + decodeURIComponent(body.toString()));
+            var result = 's4 ' + config + ' ' + decodeURIComponent(body.toString())
+
+            span.setAttribute("service.output", decodeURIComponent(result));
+            span.setAttribute("service.parentId", request.headers['parent-id'])
+            
+            response.write(result);
             response.end();
             span.end();
           });  
@@ -128,9 +146,14 @@ function s4(request, response){
 function defaultResponse(request, response){
   request.on('end', () => {
     setTimeout(() => {
-      response.write('No matching service!');
-      response.end();
-    }, 200);
+      tracer.startActiveSpan('default_service', (span) => {
+        var result = 'No matching service!';
+        span.setAttribute("service.output", decodeURIComponent(result));
+        span.setAttribute("service.parentId", request.headers['parent-id'])
+        response.write(result);
+        response.end();
+        span.end();
+      });
   });
 }
 

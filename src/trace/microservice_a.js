@@ -14,11 +14,13 @@ function makeRequest(url = '') {
       host: 'localhost',
       port: 8080,
       path: url,
+      headers: {'parent-id': span.spanContext().traceId}
     }, (response) => {
       const body = [];
       response.on('data', (chunk) => body.push(chunk));
       response.on('end', () => {
-        span.setAttribute("service.output", decodeURIComponent(body.toString()));
+        const rand = Math.floor(Math.random()*10000);
+        span.setAttribute("service.output", rand);
         console.log(body.toString());
         span.end();
       });
