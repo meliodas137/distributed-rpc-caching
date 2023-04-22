@@ -34,12 +34,12 @@ module.exports = (serviceName) => {
   // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
   provider.register();
 
-  registerInstrumentations({
-    // // when boostraping with lerna for testing purposes
-    instrumentations: [
-      new HttpInstrumentation(),
-    ],
-  });
+  // registerInstrumentations({
+  //   // // when boostraping with lerna for testing purposes
+  //   instrumentations: [
+  //     new HttpInstrumentation(),
+  //   ],
+  // });
 
   return opentelemetry.trace.getTracer('http-example');
 };
