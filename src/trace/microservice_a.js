@@ -30,11 +30,11 @@ function makeRequest(url = '') {
 
 function doRequests(){
   console.log('Sleeping 1 seconds after every request');
-  setTimeout(() => { makeRequest('/s1'); console.log('Completed.'); }, 500);
-  setTimeout(() => { makeRequest('/s2'); console.log('Completed.'); }, 1500);
-  setTimeout(() => { makeRequest('/s3'); console.log('Completed.'); }, 2000);
-  setTimeout(() => { makeRequest('/s4'); console.log('Completed.'); }, 2500);
-  setTimeout(() => { makeRequest(); console.log('Completed.'); }, 3000);
+  setTimeout(() => { makeRequest('/s1'); console.log('Completed.'); }, 200);
+  setTimeout(() => { makeRequest('/s2'); console.log('Completed.'); }, 400);
+  setTimeout(() => { makeRequest('/s3'); console.log('Completed.'); }, 600);
+  setTimeout(() => { makeRequest('/s4'); console.log('Completed.'); }, 800);
+  setTimeout(() => { makeRequest(); console.log('Completed.'); }, 1000);
 }
 
 doRequests();

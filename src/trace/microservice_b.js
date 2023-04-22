@@ -22,6 +22,7 @@ function handleRequest(request, response) {
   const body = [];
   request.on('error', (err) => console.log(err));
   request.on('data', (chunk) => body.push(chunk));
+  // console.log(request.headers['parent-id'])
   switch(request.url){
     case '/s1':
       s1(request, response);
@@ -65,7 +66,7 @@ function s1(request, response){
           });  
         });
       });
-    }, 200 );
+    }, 100 );
   });
 }
 
@@ -81,6 +82,7 @@ function s2(request, response){
         response.end();
         span.end();
       })
+    }, 100);
   });
 }
 
@@ -110,7 +112,7 @@ function s3(request, response){
           });  
         });
       });
-    }, 200 );
+    }, 100 );
   });
 }
 
@@ -139,7 +141,7 @@ function s4(request, response){
           });  
         });
       });
-    }, 200 );
+    }, 100 );
   });
 }
 
@@ -154,6 +156,7 @@ function defaultResponse(request, response){
         response.end();
         span.end();
       });
+    }, 100);
   });
 }
 
