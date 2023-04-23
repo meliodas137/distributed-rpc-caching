@@ -3,6 +3,8 @@ class Instruction:
         self.callee = callee
         self.caller = caller
 
+    #################################################################    PRINTING    ############################################################
+    
     def __str__(self):
         return f"Instruction({self.caller} --> {self.callee})"
 
@@ -17,6 +19,8 @@ class Observation:
         self.requestResult = requestRes
         self.used = False
 
+    #################################################################    PRINTING    ############################################################
+
     def __str__(self):
         return f"Observation(id={self.id}, traceId={self.traceId}, spanId={self.spanId}, parentSpanId={self.parentSpanId}, requestName={self.requestName}, requestTarget={self.requestTarget}, requestOutput={self.requestResult})"
     
@@ -28,6 +32,8 @@ class ObservationCollection:
     def addObservation(self, observation: Observation):
         self.observations.append(observation)
         self.spanIdToObsIndexMap[observation.spanId] = observation.id
+
+    #################################################################    PRINTING    ############################################################
 
     def __str__(self):
         strOut = "Observations: " + str(len(self.observations))

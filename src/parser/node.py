@@ -12,15 +12,30 @@ class ResponseVector:
         return f"ResponseVector(caller={self.caller}, request={self.request}, response={self.response})"
 
 class Node:
-    def __init__(self, name):
+    def __init__(self, id, name):
+        self.id = id
         self.serviceName = name
         self.responseCollection: ResponseVector = []
+        self.childNodes: Node = []
+        self.deterministic = True
 
     def addObservedResponse(self, response: ResponseVector):
         self.responseCollection.append(response)
+    
+    def checkNodeDeterministic(self):
+        n = len(self.responseCollection)
+        for resIndex in range(n):
+            resVec = self.responseCollection[resIndex]
+            for compIndex in range(resIndex + 1, n):
+                comVec = self.responseCollection[compIndex]
+                if resVec.caller == comVec.caller and resVec.request == comVec.request and resVec.response != comVec.response:
+                    self.deterministic = False
+                    return
 
+    #################################################################    PRINTING    ############################################################
+           
     def __str__(self):
-        strOut = self.serviceName
+        strOut = "ID: " + str(self.id) + ", Name: " + self.serviceName + ", Deterministic: " + str(self.deterministic)
         for response in self.responseCollection:
             strOut = strOut + "\n" + str(response)
         return strOut
@@ -46,7 +61,7 @@ class InputComponents:
         if nodeName not in self.componentIndexMap:
             index = len(self.components)
             self.components.append(nodeName)
-            node = Node(nodeName)
+            node = Node(index, nodeName)
             self.nodes.append(node)
             self.componentIndexMap[nodeName] = index
 
@@ -85,3 +100,5 @@ class InputComponents:
         self.__loadObservationsFromData()
         # print(self.observationCollection)
         self.__processObservationCollection()
+        for node in self.nodes:
+            node.checkNodeDeterministic()
