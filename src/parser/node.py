@@ -41,9 +41,8 @@ class Node:
         return strOut
     
 class InputComponents:
-    FILE_LOCATION = "../trace/logs/trace_full.json"
+    FILE_LOCATION = "../trace/logs/trace.json"
     SERVICE_NAME_DELIMITER = "_"
-    TARGET_NAME_DELIMITER = "/"
     DEFAULT_REQUEST = "DEFAULT"
 
     def __init__(self):
@@ -74,23 +73,17 @@ class InputComponents:
         self.instructions.append(instr)
     
     def __processObservation(self, observation: Observation):
-        if observation.parentSpanId == "":
-            return
-        if observation.parentSpanId in self.observationCollection.spanIdToObsIndexMap:
-            callerObsv: Observation = self.observationCollection.observations[self.observationCollection.spanIdToObsIndexMap[observation.parentSpanId]]
-            if observation.requestTarget != "" and self.SERVICE_NAME_DELIMITER in callerObsv.requestName:
+        serviceName = observation.requestName.split(self.SERVICE_NAME_DELIMITER)[0]
+        callerName = ""
+        self.__createNodeByName(serviceName)
+        if observation.parentTraceId != "":
+            if observation.parentTraceId in self.observationCollection.traceIdToObsIndexMap:
+                callerObsv: Observation = self.observationCollection.observations[self.observationCollection.traceIdToObsIndexMap[observation.parentTraceId]]
                 callerName = callerObsv.requestName.split(self.SERVICE_NAME_DELIMITER)[0]
-                targetName = observation.requestTarget.split(self.TARGET_NAME_DELIMITER)[-1]
-                if targetName == "":
-                    targetName = "/"
                 self.__createNodeByName(callerName)
-                self.__createNodeByName(targetName)
-                self.__addResponseForNode(targetName, callerName, self.DEFAULT_REQUEST, callerObsv.requestResult)
-                self.__addInstruction(targetName, callerName)
-                callerObsv.used = True
-                observation.used = True
-        else:
-            print(observation.parentSpanId + " NOT FOUND :(")
+                self.__addInstruction(serviceName, callerName)
+        if observation.requestResult != "":
+            self.__addResponseForNode(serviceName, callerName, self.DEFAULT_REQUEST, observation.requestResult)
 
     def __processObservationCollection(self):
         for observation in self.observationCollection.observations:
