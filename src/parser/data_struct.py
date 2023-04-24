@@ -9,18 +9,19 @@ class Instruction:
         return f"Instruction({self.caller} --> {self.callee})"
 
 class Observation:
-    def __init__(self, id, traceId, spanId, parentTraceId, requestName, requestRes):
+    def __init__(self, id, traceId, spanId, parentTraceId, serviceName, input, output):
         self.id = id
         self.traceId = traceId
         self.spanId = spanId
         self.parentTraceId = parentTraceId
-        self.requestName = requestName
-        self.requestResult = requestRes
+        self.serviceName = serviceName
+        self.input = input
+        self.output = output
 
     #################################################################    PRINTING    ############################################################
 
     def __str__(self):
-        return f"Observation(id={self.id}, traceId={self.traceId}, spanId={self.spanId}, parentTraceId={self.parentTraceId}, requestName={self.requestName}, requestOutput={self.requestResult})"
+        return f"Observation(id={self.id}, traceId={self.traceId}, spanId={self.spanId}, parentTraceId={self.parentTraceId}, requestName={self.serviceName}, requestOutput={self.output})"
     
 class ObservationCollection:
     def __init__(self):

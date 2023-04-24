@@ -18,6 +18,7 @@ class InputParser:
     JSON_KEY_INT_VALUE = "intValue"
 
     HTTP_TARGET = "http.target"
+    SERVICE_INPUT = "service.input"
     SERVICE_OUTPUT = "service.output"
 
     def __init__(self, file_path):
@@ -40,7 +41,7 @@ class InputParser:
             traceId = spanData[self.JSON_KEY_TRACE_ID]
             spanId = spanData[self.JSON_KEY_SPAN_ID]
             reqName = spanData[self.JSON_KEY_NAME]
-            parentTraceId, reqOutput = "", ""
+            parentTraceId, input, reqOutput = "", "", ""
             attributesData = spanData[self.JSON_KEY_ATTRIBUTES]
             if attributesData:
                 for attribute in attributesData:
@@ -53,7 +54,9 @@ class InputParser:
                         reqOutput = value
                     if key == self.JSON_KEY_PARENT_TRACE_ID:
                         parentTraceId = value
-            obs = Observation(id, traceId, spanId, parentTraceId, reqName, reqOutput)
+                    if key == self.SERVICE_INPUT:
+                        input = value
+            obs = Observation(id, traceId, spanId, parentTraceId, reqName, input, reqOutput)
             observationCollection.addObservation(obs)
             id = id + 1
         return observationCollection

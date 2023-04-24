@@ -29,42 +29,42 @@ def mainSolver():
     print(len(input.instructions))
     
 
-    # input.components = ["Eatables", "Meat", "Fruit", "Apple", "Veggies", "Brocolli"]
+    input.components = ["Eatables", "Meat", "Fruit", "Apple", "Veggies", "Brocolli"]
+    input.instructions = [
+        Instruction(caller="Eatables", callee="Meat"),
+        Instruction(caller="Eatables", callee="Fruit"),
+        Instruction(caller="Eatables", callee="Veggies"),
+        Instruction(caller="Eatables", callee="Meat"),
+        Instruction(caller="Eatables", callee="Fruit"),
+        Instruction(caller="Fruit", callee="Apple"),
+        Instruction(caller="Fruit", callee="Apple"),
+        Instruction(caller="Veggies", callee="Brocolli"),
+        Instruction(caller="Veggies", callee="Brocolli"),
+        Instruction(caller="Eatables", callee="Meat")
+    ]
+    # input.components = ["a", "b", "c"]
     # input.instructions = [
-    #     Instruction(caller="Eatables", callee="Meat"),
-    #     Instruction(caller="Eatables", callee="Fruit"),
-    #     Instruction(caller="Eatables", callee="Veggies"),
-    #     Instruction(caller="Eatables", callee="Meat"),
-    #     Instruction(caller="Eatables", callee="Fruit"),
-    #     Instruction(caller="Fruit", callee="Apple"),
-    #     Instruction(caller="Fruit", callee="Apple"),
-    #     Instruction(caller="Veggies", callee="Brocolli"),
-    #     Instruction(caller="Veggies", callee="Brocolli"),
-    #     Instruction(caller="Eatables", callee="Meat")
+    #     Instruction(caller="a", callee="b"),
+    #     Instruction(caller="a", callee="c"),
+    #     Instruction(caller="a", callee="b"),
+    #     Instruction(caller="a", callee="b"),
+    #     Instruction(caller="a", callee="c"),
+    #     Instruction(caller="a", callee="c")
     # ]
-    # # input.components = ["a", "b", "c"]
-    # # input.instructions = [
-    # #     Instruction(caller="a", callee="b"),
-    # #     Instruction(caller="a", callee="c"),
-    # #     Instruction(caller="a", callee="b"),
-    # #     Instruction(caller="a", callee="b"),
-    # #     Instruction(caller="a", callee="c"),
-    # #     Instruction(caller="a", callee="c")
-    # # ]
-    # input.nodes = generateNodes(input.components)
-    # mysteryMachine = MysteryMachine(input.components, input.instructions)
-    # mysteryMachine.constructModel()
-    # print(mysteryMachine.componentMap)
-    # print(mysteryMachine.causalGraph)
-    # print(mysteryMachine.observationGraph)
-    # print("All Models")
-    # mysteryMachine.EnumeratePaths()
-    # print("Chosen Model")
-    # graph: Graph = mysteryMachine.chooseGraphModel()
-    # print(graph)
-    # print(graph.printLabelledGraph(input.components))
-    # model = NodeGraph(input.nodes, graph)
-    # print(model)
+    input.nodes = generateNodes(input.components)
+    mysteryMachine = MysteryMachine(input.components, input.instructions)
+    mysteryMachine.constructModel()
+    print(mysteryMachine.componentMap)
+    print(mysteryMachine.causalGraph)
+    print(mysteryMachine.observationGraph)
+    print("All Models")
+    mysteryMachine.EnumeratePaths()
+    print("Chosen Model")
+    graph: Graph = mysteryMachine.chooseGraphModel()
+    print(graph)
+    print(graph.printLabelledGraph(input.components))
+    model = NodeGraph(input.nodes, graph)
+    print(model)
 
 if __name__ == '__main__':
     mainSolver()
