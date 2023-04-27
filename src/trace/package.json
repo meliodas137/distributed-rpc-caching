@@ -11,7 +11,8 @@
     "jaeger:client": "cross-env EXPORTER=jaeger node ./client.js",
     "msa": "node ./microservice_a.js",
     "msb": "node ./microservice_b.js",
-    "msc": "node ./microservice_c.js"
+    "msc": "node ./microservice_c.js",
+    "lb": "node ./loadbalancer.js"
   },
   "repository": {
     "type": "git",
