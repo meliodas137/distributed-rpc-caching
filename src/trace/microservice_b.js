@@ -45,10 +45,12 @@ function s1(request, response){
   request.on('end', () => {
     setTimeout(() => {
       tracer.startActiveSpan('s1_request', (span) => {
+        var input = request.headers['input']
+        var url = input === 'fallback' ? '/s7' : '/s5'
         http.get({
           host: 'localhost',
           port: 8081,
-          path: '/s5',
+          path: url,
           headers: {'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
@@ -59,6 +61,7 @@ function s1(request, response){
 
             span.setAttribute("service.output", decodeURIComponent(result));
             span.setAttribute("service.parentId", request.headers['parent-id'])
+            span.setAttribute("service.input", input)
             
             response.write(result);
             response.end();
@@ -74,13 +77,40 @@ function s2(request, response){
   request.on('end', () => {
     setTimeout(() => {
       tracer.startActiveSpan('s2_service', (span) => {
+        var input = request.headers['input']
         const config = 'fixed config'
         var result = 's2 ' + config;
-        span.setAttribute("service.output", decodeURIComponent(result));
-        span.setAttribute("service.parentId", request.headers['parent-id'])
-        response.write(result);
-        response.end();
-        span.end();
+        
+        if(input === 'fetch') {
+          http.get({
+            host: 'localhost',
+            port: 8081,
+            path: '/s7',
+            headers: {'parent-id': span.spanContext().traceId}
+          }, (res) => {
+            const body = [];
+            res.on('data', (chunk) => body.push(chunk));
+            res.on('end', () => {
+
+              var result = result + decodeURIComponent(body.toString())
+
+              span.setAttribute("service.output", decodeURIComponent(result));
+              span.setAttribute("service.parentId", request.headers['parent-id'])
+              span.setAttribute("service.input", input)
+
+              response.write(result);
+              response.end();
+              span.end();
+            });  
+          })
+        } else {
+          span.setAttribute("service.output", decodeURIComponent(result));
+          span.setAttribute("service.parentId", request.headers['parent-id'])
+          span.setAttribute("service.input", input)
+          response.write(result);
+          response.end();
+          span.end();
+        }
       })
     }, 100);
   });
@@ -89,11 +119,13 @@ function s2(request, response){
 function s3(request, response){
   request.on('end', () => {
     setTimeout(() => {
+      var input = request.headers['input']
+      var url = input === 'default' ? '' : '/s7'
       tracer.startActiveSpan('s3_request', (span) => {
         http.get({
           host: 'localhost',
           port: 8081,
-          path: '/s7',
+          path: url,
           headers: {'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
@@ -105,6 +137,7 @@ function s3(request, response){
 
             span.setAttribute("service.output", decodeURIComponent(result));
             span.setAttribute("service.parentId", request.headers['parent-id'])
+            span.setAttribute("service.input", input)
             
             response.write(result);
             response.end();
@@ -119,11 +152,13 @@ function s3(request, response){
 function s4(request, response){
   request.on('end', () => {
     setTimeout(() => {
+      var input = request.headers['input']
+      var url = input === 'fallback' ? 's5' : '/s6'
       tracer.startActiveSpan('s4_request', (span) => {
         http.get({
           host: 'localhost',
           port: 8081,
-          path: '/s6',
+          path: url,
           headers: {'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
@@ -134,6 +169,7 @@ function s4(request, response){
 
             span.setAttribute("service.output", decodeURIComponent(result));
             span.setAttribute("service.parentId", request.headers['parent-id'])
+            span.setAttribute("service.input", request.headers['input'])
             
             response.write(result);
             response.end();
@@ -152,6 +188,7 @@ function defaultResponse(request, response){
         var result = 'No matching service!';
         span.setAttribute("service.output", decodeURIComponent(result));
         span.setAttribute("service.parentId", request.headers['parent-id'])
+        span.setAttribute("service.input", request.headers['input'])
         response.write(result);
         response.end();
         span.end();
