@@ -46,12 +46,11 @@ function s1(request, response){
     setTimeout(() => {
       tracer.startActiveSpan('s1_request', (span) => {
         var input = request.headers['input']
-        var url = input === 'fallback' ? '/s7' : '/s5'
+        var path = input === 'fallback' ? '/s7' : '/s5'
         http.get({
           host: 'localhost',
-          port: 8081,
-          path: url,
-          headers: {'parent-id': span.spanContext().traceId}
+          port: 8082,
+          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
@@ -84,9 +83,8 @@ function s2(request, response){
         if(input === 'fetch') {
           http.get({
             host: 'localhost',
-            port: 8081,
-            path: '/s7',
-            headers: {'parent-id': span.spanContext().traceId}
+            port: 8082,
+            headers: {'port': 8081, url: '/s7', 'parent-id': span.spanContext().traceId}
           }, (res) => {
             const body = [];
             res.on('data', (chunk) => body.push(chunk));
@@ -120,13 +118,12 @@ function s3(request, response){
   request.on('end', () => {
     setTimeout(() => {
       var input = request.headers['input']
-      var url = input === 'default' ? '' : '/s7'
+      var path = input === 'default' ? '' : '/s7'
       tracer.startActiveSpan('s3_request', (span) => {
         http.get({
           host: 'localhost',
-          port: 8081,
-          path: url,
-          headers: {'parent-id': span.spanContext().traceId}
+          port: 8082,
+          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
@@ -153,13 +150,12 @@ function s4(request, response){
   request.on('end', () => {
     setTimeout(() => {
       var input = request.headers['input']
-      var url = input === 'fallback' ? 's5' : '/s6'
+      var path = input === 'fallback' ? 's5' : '/s6'
       tracer.startActiveSpan('s4_request', (span) => {
         http.get({
           host: 'localhost',
-          port: 8081,
-          path: url,
-          headers: {'parent-id': span.spanContext().traceId}
+          port: 8082,
+          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));

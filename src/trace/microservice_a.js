@@ -12,9 +12,8 @@ function makeRequest(url = '', input = '') {
   tracer.startActiveSpan('a_request', (span) => {
     http.get({
       host: 'localhost',
-      port: 8080,
-      path: url,
-      headers: {'parent-id': span.spanContext().traceId, 'input': input}
+      port: 8082, //sending it to loadbalancer
+      headers: {'url': url, 'parent-id': span.spanContext().traceId, 'input': input, port: 8080}
     }, (response) => {
       const body = [];
       response.on('data', (chunk) => body.push(chunk));
