@@ -1,50 +1,56 @@
 from data_struct import Observation, ObservationCollection
 from data_parser import InputParser
 from data_struct import Instruction
+from typing import Dict, List
+import json
 
 class ResponseVector:
-    def __init__(self, caller, request, response):
-        self.caller = caller
-        self.request = request
-        self.response = response
+    def __init__(self, input, output):
+        self.deterministic = True
+        self.input = input
+        self.output = output
 
-    def __str__(self):
-        return f"ResponseVector(caller={self.caller}, request={self.request}, response={self.response})"
+    
+class ResponseTable:
+    def __init__(self):
+        self.responses: List[ResponseVector] = []
+
+    def addResponse(self, response: ResponseVector):
+        self.responses.append(response)
+
 
 class Node:
     def __init__(self, id, name):
         self.id = id
         self.serviceName = name
-        self.responseCollection: ResponseVector = []
-        self.childNodes: Node = []
-        self.deterministic = True
+        self.forwardingTable: Dict[str, ResponseTable] = {}
 
-    def addObservedResponse(self, response: ResponseVector):
-        self.responseCollection.append(response)
-    
-    def checkNodeDeterministic(self):
-        n = len(self.responseCollection)
-        for resIndex in range(n):
-            resVec = self.responseCollection[resIndex]
-            for compIndex in range(resIndex + 1, n):
-                comVec = self.responseCollection[compIndex]
-                if resVec.caller == comVec.caller and resVec.request == comVec.request and resVec.response != comVec.response:
-                    self.deterministic = False
-                    return
+    def addObservedResponse(self, serviceToCall: str, response: ResponseVector):
+        if serviceToCall not in self.forwardingTable:
+            responses = ResponseTable()
+            responses.addResponse(response)
+            self.forwardingTable[serviceToCall] = responses
+        else:
+            for observedResponse in self.forwardingTable[serviceToCall].responses:
+                if observedResponse.input == response.input:
+                    if observedResponse.output == response.output:
+                        return
+                    else:
+                        observedResponse.deterministic = False
+                        return
+            self.forwardingTable[serviceToCall].responses.append(response)
 
-    #################################################################    PRINTING    ############################################################
-           
-    def __str__(self):
-        strOut = "ID: " + str(self.id) + ", Name: " + self.serviceName + ", Deterministic: " + str(self.deterministic)
-        for response in self.responseCollection:
-            strOut = strOut + "\n" + str(response)
-        return strOut
-    
+
+class NodeCaches:
+    def __init__(self, nodes):
+        self.services = nodes
+
+
 class InputComponents:
-    FILE_LOCATION = "../trace/logs/trace_full.json"
+    INPUT_FILE_LOCATION = "../trace/logs/trace_full.json"
     SERVICE_NAME_DELIMITER = "_"
-    TARGET_NAME_DELIMITER = "/"
     DEFAULT_REQUEST = "DEFAULT"
+    LOAD_BALANCER = "loadbalancer"
 
     def __init__(self):
         self.components: str = []
@@ -52,9 +58,10 @@ class InputComponents:
         self.componentIndexMap = {}
         self.instructions: Instruction = []
         self.observationCollection: ObservationCollection
+        self.nodeCaches: NodeCaches = None
 
     def __loadObservationsFromData(self):
-        inputParser = InputParser(file_path=self.FILE_LOCATION)
+        inputParser = InputParser(file_path=self.INPUT_FILE_LOCATION)
         self.observationCollection = inputParser.getObservationsFromInput()
 
     def __createNodeByName(self, nodeName):
@@ -65,32 +72,27 @@ class InputComponents:
             self.nodes.append(node)
             self.componentIndexMap[nodeName] = index
 
-    def __addResponseForNode(self, nodeName, callerName, request, response):
+    def __addResponseForNode(self, nodeName, calledService, input, output):
         node: Node = self.nodes[self.componentIndexMap[nodeName]]
-        node.addObservedResponse(ResponseVector(callerName, request, response))
-
-    def __addInstruction(self, callee, caller):
-        instr = Instruction(callee, caller)
-        self.instructions.append(instr)
+        node.addObservedResponse(calledService, ResponseVector(input, output))
     
     def __processObservation(self, observation: Observation):
-        if observation.parentSpanId == "":
+        serviceName = observation.serviceName.split(self.SERVICE_NAME_DELIMITER)[0]
+        if serviceName == self.LOAD_BALANCER:
             return
-        if observation.parentSpanId in self.observationCollection.spanIdToObsIndexMap:
-            callerObsv: Observation = self.observationCollection.observations[self.observationCollection.spanIdToObsIndexMap[observation.parentSpanId]]
-            if observation.requestTarget != "" and self.SERVICE_NAME_DELIMITER in callerObsv.requestName:
-                callerName = callerObsv.requestName.split(self.SERVICE_NAME_DELIMITER)[0]
-                targetName = observation.requestTarget.split(self.TARGET_NAME_DELIMITER)[-1]
-                if targetName == "":
-                    targetName = "/"
-                self.__createNodeByName(callerName)
-                self.__createNodeByName(targetName)
-                self.__addResponseForNode(targetName, callerName, self.DEFAULT_REQUEST, callerObsv.requestResult)
-                self.__addInstruction(targetName, callerName)
-                callerObsv.used = True
-                observation.used = True
-        else:
-            print(observation.parentSpanId + " NOT FOUND :(")
+        parentName = ""
+        self.__createNodeByName(serviceName)
+        if observation.parentTraceId != "":
+            if observation.parentTraceId in self.observationCollection.traceIdToObsIndexMap:
+                parentObsv: Observation = self.observationCollection.observations[self.observationCollection.traceIdToObsIndexMap[observation.parentTraceId]]
+                if parentObsv.serviceName == self.LOAD_BALANCER:
+                    if parentObsv.parentTraceId == "" or parentObsv.parentTraceId not in self.observationCollection.traceIdToObsIndexMap:
+                        return
+                    parentObsv: Observation = self.observationCollection.observations[self.observationCollection.traceIdToObsIndexMap[parentObsv.parentTraceId]]
+                parentName = parentObsv.serviceName.split(self.SERVICE_NAME_DELIMITER)[0]
+                self.__createNodeByName(parentName)
+                self.__addResponseForNode(parentName, serviceName, observation.input, observation.output)
+
 
     def __processObservationCollection(self):
         for observation in self.observationCollection.observations:
@@ -98,7 +100,30 @@ class InputComponents:
 
     def findInputComponents(self):
         self.__loadObservationsFromData()
-        # print(self.observationCollection)
         self.__processObservationCollection()
-        for node in self.nodes:
-            node.checkNodeDeterministic()
+        self.nodeCaches = NodeCaches(self.nodes)
+
+
+class JsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Node):
+            return {
+                'id': obj.id,
+                'serviceName': obj.serviceName,
+                'forwardingTable': obj.forwardingTable
+            }
+        if isinstance(obj, ResponseTable):
+            return {
+                'responses': obj.responses
+            }
+        if isinstance(obj, ResponseVector):
+            return {
+                "input": obj.input,
+                "output": obj.output,
+                "deterministic": obj.deterministic
+            }
+        if isinstance(obj, NodeCaches):
+            return {
+                "services": obj.services
+            }
+        return super(JsonEncoder, self).default(obj)

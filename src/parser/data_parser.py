@@ -9,14 +9,16 @@ class InputParser:
     JSON_KEY_ZERO = 0
     JSON_KEY_TRACE_ID = "traceId"
     JSON_KEY_SPAN_ID = "spanId"
-    JSON_KEY_PARENT_SPAN_ID = "parentSpanId"
+    JSON_KEY_PARENT_TRACE_ID = "service.parentId"
     JSON_KEY_NAME = "name"
     JSON_KEY_ATTRIBUTES = "attributes"
     JSON_KEY_KEY = "key"
     JSON_KEY_VALUE = "value"
     JSON_KEY_STRING_VALUE = "stringValue"
+    JSON_KEY_INT_VALUE = "intValue"
 
     HTTP_TARGET = "http.target"
+    SERVICE_INPUT = "service.input"
     SERVICE_OUTPUT = "service.output"
 
     def __init__(self, file_path):
@@ -38,13 +40,8 @@ class InputParser:
             spanData = jsonData[self.JSON_KEY_RESOURCE_SPANS][self.JSON_KEY_ZERO][self.JSON_KEY_SCOPE_SPANS][self.JSON_KEY_ZERO][self.JSON_KEY_SPANS][self.JSON_KEY_ZERO]
             traceId = spanData[self.JSON_KEY_TRACE_ID]
             spanId = spanData[self.JSON_KEY_SPAN_ID]
-            parentSpanId = ""
-            try:
-                parentSpanId = spanData[self.JSON_KEY_PARENT_SPAN_ID]
-            except Exception:
-                pass
             reqName = spanData[self.JSON_KEY_NAME]
-            reqTarget, reqOutput = "", ""
+            parentTraceId, input, reqOutput = "", "", ""
             attributesData = spanData[self.JSON_KEY_ATTRIBUTES]
             if attributesData:
                 for attribute in attributesData:
@@ -52,12 +49,14 @@ class InputParser:
                     try:
                         value = attribute[self.JSON_KEY_VALUE][self.JSON_KEY_STRING_VALUE]
                     except Exception:
-                        continue
+                        value = attribute[self.JSON_KEY_VALUE][self.JSON_KEY_INT_VALUE]
                     if key == self.SERVICE_OUTPUT:
                         reqOutput = value
-                    if key == self.HTTP_TARGET:
-                        reqTarget = value
-            obs = Observation(id, traceId, spanId, parentSpanId, reqName, reqTarget, reqOutput)
+                    if key == self.JSON_KEY_PARENT_TRACE_ID:
+                        parentTraceId = value
+                    if key == self.SERVICE_INPUT:
+                        input = value
+            obs = Observation(id, traceId, spanId, parentTraceId, reqName, input, reqOutput)
             observationCollection.addObservation(obs)
             id = id + 1
         return observationCollection

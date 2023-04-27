@@ -19,23 +19,14 @@ def generateNodes(components):
 
 def mainSolver():
     input = InputComponents()
-    # input.findInputComponents()
-    # print(input.components)
-    # print(input.componentIndexMap)
+    input.findInputComponents()
+    print(input.components)
+    print(input.componentIndexMap)
     # for instr in input.instructions:
     #     print(instr)
-    # for node in input.nodes:
-    #     print(node)
-    # used, notUsed = 0, 0
-    # for observation in input.observationCollection.observations:
-    #     if observation.used:
-    #         used = used + 1
-    #     else:
-    #         print(observation)
-    #         notUsed = notUsed + 1
-    # print(used)
-    # print(notUsed)
-    # print(len(input.instructions))
+    for node in input.nodes:
+        print(node)
+    print(len(input.instructions))
     
 
     input.components = ["Eatables", "Meat", "Fruit", "Apple", "Veggies", "Brocolli"]
@@ -74,9 +65,6 @@ def mainSolver():
     print(graph.printLabelledGraph(input.components))
     model = NodeGraph(input.nodes, graph)
     print(model)
-    sets = mysteryMachine.generateAllSets([1,2,3])
-    print(sets)
-    print(sets[7])
 
 if __name__ == '__main__':
     mainSolver()
