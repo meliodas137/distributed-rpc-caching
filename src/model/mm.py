@@ -1,8 +1,10 @@
 import sys
 sys.path.append('../')
 
+import itertools
 import numpy as np
 from graph import Graph
+from typing import List
 from parser.data_struct import Instruction
 
 class MysteryMachine:
@@ -14,7 +16,6 @@ class MysteryMachine:
         self.componentIdToLabelMap = {}
         self.causalGraph = []
         self.observationGraph = []
-        self.causalPaths = []
         self.modelGraphs: Graph = []
         self.graphSet = set()
     
@@ -49,27 +50,47 @@ class MysteryMachine:
         for index in range(n):
             nodeAdded[index] = 1
             adj = [[] for j in range(n)]
-            self.__explorePaths(adj, index, index, n, nodeAdded, 0)
+            self.__explorePaths(adj, index, 0, n, nodeAdded, 0)
             nodeAdded[index] = 0
         
         self.__printPaths()
-        print("Filtered Paths:")
         self.__filterPaths()
+        print("Filtered Models: " + str(len(self.causalGraph)))
         self.__printPaths()
+    
+    def generateAllSets(self, nums: List[int]):
+        subsets = []
+        for L in range(0, len(nums)+1):
+            for subset in itertools.permutations(nums, L):
+                subsets.append(subset)
+        return subsets
 
-    def __explorePaths(self, adj, currentIndex, parentIndex, maxIndex, nodeAdded, score):
+    # def __explorePaths2(self, adj, indexes, maxIndex, nodeAdded, score):
+    #     notLeaf = False
+    #     for currentIndex in indexes:
+    #         avNums = []
+    #         for index in range(maxIndex):
+    #             if nodeAdded[index] == 0 and self.causalGraph[currentIndex][index] == 1:
+    #                 avNums.append(index)
+    #         combinations = self.generateAllSets(avNums)
+    #         for combination in combinations:
+
+
+    def __explorePaths(self, adj, currentIndex, minIndex, maxIndex, nodeAdded, score):
         # print(str(currentIndex) + ", " + str(parentIndex) + " -> " + str(nodeAdded))
         notLeaf = False
-        for mode in range(2):
-            for neighbor in range(maxIndex):
+        for mode in range(3):
+            for neighbor in range(max(0, minIndex), maxIndex):
                 if self.causalGraph[currentIndex][neighbor] == 0 or nodeAdded[neighbor] == 1:
                     continue
                 notLeaf = True
+                if (mode == 0):
+                    self.__explorePaths(adj, currentIndex, neighbor + 1, maxIndex, nodeAdded, score)
                 edgeScore = self.observationGraph[currentIndex][neighbor]
                 adj[currentIndex].append(neighbor)
                 # print(f"mode={mode}, current={currentIndex}, neighbor={neighbor}, nodeAdded={nodeAdded}")
                 nodeAdded[neighbor] = 1
-                if mode == 0:
+                if mode == 1:
                     self.__explorePaths(adj, currentIndex, currentIndex, maxIndex, nodeAdded, score + edgeScore)
                 else:
                     self.__explorePaths(adj, neighbor, currentIndex, maxIndex, nodeAdded, score+edgeScore)
@@ -97,14 +118,6 @@ class MysteryMachine:
             if graph.score != 0:
                 graphs.append(graph)
         self.modelGraphs = graphs
-
-    def __getLabelledPath(self, path):
-        pathString = ""
-        for node in path:
-            pathString = pathString + self.componentIdToLabelMap[node] + " -> "
-            # pathString = pathString + str(node) + " -> "
-        pathString = pathString + str(self.__getPathScore(path))
-        return pathString
     
     def chooseGraphModel(self):
         score = -1
