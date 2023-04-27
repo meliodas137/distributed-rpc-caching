@@ -4,7 +4,7 @@ import json
 def mainSolver():
     input = InputComponents()
     input.findInputComponents()
-    # print(json.dumps(input.nodeCaches, cls=JsonEncoder, indent=4))
+    print(json.dumps(input.nodeCaches, cls=JsonEncoder, indent=4))
     with open("../trace/cacheInfo.json", "w") as f:
         json.dump(input.nodeCaches, f, cls=JsonEncoder)
 

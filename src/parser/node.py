@@ -50,6 +50,7 @@ class InputComponents:
     INPUT_FILE_LOCATION = "../trace/logs/trace_full.json"
     SERVICE_NAME_DELIMITER = "_"
     DEFAULT_REQUEST = "DEFAULT"
+    LOAD_BALANCER = "loadbalancer"
 
     def __init__(self):
         self.components: str = []
@@ -77,14 +78,21 @@ class InputComponents:
     
     def __processObservation(self, observation: Observation):
         serviceName = observation.serviceName.split(self.SERVICE_NAME_DELIMITER)[0]
+        if serviceName == self.LOAD_BALANCER:
+            return
         parentName = ""
         self.__createNodeByName(serviceName)
         if observation.parentTraceId != "":
             if observation.parentTraceId in self.observationCollection.traceIdToObsIndexMap:
                 parentObsv: Observation = self.observationCollection.observations[self.observationCollection.traceIdToObsIndexMap[observation.parentTraceId]]
+                if parentObsv.serviceName == self.LOAD_BALANCER:
+                    if parentObsv.parentTraceId == "" or parentObsv.parentTraceId not in self.observationCollection.traceIdToObsIndexMap:
+                        return
+                    parentObsv: Observation = self.observationCollection.observations[self.observationCollection.traceIdToObsIndexMap[parentObsv.parentTraceId]]
                 parentName = parentObsv.serviceName.split(self.SERVICE_NAME_DELIMITER)[0]
                 self.__createNodeByName(parentName)
                 self.__addResponseForNode(parentName, serviceName, observation.input, observation.output)
+
 
     def __processObservationCollection(self):
         for observation in self.observationCollection.observations:
