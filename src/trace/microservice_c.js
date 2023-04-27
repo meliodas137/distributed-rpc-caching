@@ -43,6 +43,7 @@ function s5(request, response){
       tracer.startActiveSpan('s5_service', (span) => {
         var res = 's5 ';
         span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.input", '');
         span.setAttribute("service.parentId", request.headers['parent-id'])
         response.write(res);
         response.end();
@@ -58,6 +59,7 @@ function s6(request, response){
       tracer.startActiveSpan('s6_service', (span) => {
         var res = 's6 ';
         span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.input", '');
         span.setAttribute("service.parentId", request.headers['parent-id'])
         response.write(res);
         response.end();
@@ -74,6 +76,7 @@ function s7(request, response){
         const rand = Math.floor(Math.random()*20000);
         var res = 's7 ' + rand;
         span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.input", '');
         span.setAttribute("service.parentId", request.headers['parent-id'])
         response.write(res);
         response.end();
@@ -89,6 +92,7 @@ function defaultResponse(request, response){
       tracer.startActiveSpan('s7_service', (span) => {
         var res = 'No matching service!';
         span.setAttribute("service.output", decodeURIComponent(res));
+        span.setAttribute("service.input", '');
         span.setAttribute("service.parentId", request.headers['parent-id'])
         response.write(res);
         response.end();
