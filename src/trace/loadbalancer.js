@@ -22,9 +22,37 @@ function handleRequest(request, response) {
   const body = [];
   request.on('error', (err) => console.log(err));
   request.on('data', (chunk) => body.push(chunk));
-  switch(request.url){
+  request.on('end', () => {
+    setTimeout(() => {
+    tracer.startActiveSpan('loadbalancer', (span) => {
+        var parent = request.headers['parent-id']
+        var input = request.headers['input']
+        request.headers['parent-id'] = span.spanContext().traceId
+        http.get({
+            host: 'localhost',
+            port: request.headers['port'],
+            path: request.headers['url'],
+            headers: request.headers
+        }, (res) => {
+        const body = [];
+        res.on('data', (chunk) => body.push(chunk));
+        res.on('end', () => {
 
-  }
+          const rand = Math.floor(Math.random()*10000);
+          var result = 's3 random output ' + rand + ' ' + decodeURIComponent(body.toString());
+
+          span.setAttribute("service.output", decodeURIComponent(result));
+          span.setAttribute("service.parentId", parent)
+          span.setAttribute("service.input", input)
+          
+          response.write(result);
+          response.end();
+          span.end();
+        });  
+      });
+    });
+  }, 100 );
+});
 }
 
-startServer(8081);
+startServer(8082);
