@@ -50,7 +50,7 @@ function s1(request, response){
         http.get({
           host: 'localhost',
           port: 8082,
-          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId}
+          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId, caller: 's1'}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
@@ -76,21 +76,21 @@ function s2(request, response){
   request.on('end', () => {
     setTimeout(() => {
       tracer.startActiveSpan('s2_service', (span) => {
-        var input = request.headers['input']
+        let input = request.headers['input']
         const config = 'fixed config'
-        var result = 's2 ' + config;
+        let result = 's2 ' + config;
         
         if(input === 'fetch') {
           http.get({
             host: 'localhost',
             port: 8082,
-            headers: {'port': 8081, url: '/s7', 'parent-id': span.spanContext().traceId}
+            headers: {'port': 8081, url: '/s7', 'parent-id': span.spanContext().traceId, caller: 's2'}
           }, (res) => {
             const body = [];
             res.on('data', (chunk) => body.push(chunk));
             res.on('end', () => {
 
-              var result = result + decodeURIComponent(body.toString())
+              result = result + decodeURIComponent(body.toString())
 
               span.setAttribute("service.output", decodeURIComponent(result));
               span.setAttribute("service.parentId", request.headers['parent-id'])
@@ -123,7 +123,7 @@ function s3(request, response){
         http.get({
           host: 'localhost',
           port: 8082,
-          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId}
+          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId, caller: 's3'}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));
@@ -155,7 +155,7 @@ function s4(request, response){
         http.get({
           host: 'localhost',
           port: 8082,
-          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId}
+          headers: {'port': 8081, url: path, 'parent-id': span.spanContext().traceId, caller: 's4'}
         }, (res) => {
           const body = [];
           res.on('data', (chunk) => body.push(chunk));

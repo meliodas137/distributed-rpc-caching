@@ -13,7 +13,7 @@ function makeRequest(url = '', input = '') {
     http.get({
       host: 'localhost',
       port: 8082, //sending it to loadbalancer
-      headers: {'url': url, 'parent-id': span.spanContext().traceId, 'input': input, port: 8080}
+      headers: {'url': url, 'parent-id': span.spanContext().traceId, 'input': input, port: 8080, caller: 'a'}
     }, (response) => {
       const body = [];
       response.on('data', (chunk) => body.push(chunk));
