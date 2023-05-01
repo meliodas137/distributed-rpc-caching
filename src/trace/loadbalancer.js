@@ -28,10 +28,11 @@ function handleRequest(request, response) {
   request.on('end', () => {
     setTimeout(() => {
     tracer.startActiveSpan('loadbalancer', (span) => {
-        var parent = request.headers['parent-id']
-        var input = request.headers['input']
+        let parent = request.headers['parent-id']
+        let input = request.headers['input']
         request.headers['parent-id'] = span.spanContext().traceId
-        if(requiresReq(request)) {
+        let {fwdReq, output} = requiresReq(request)
+        if(fwdReq) {
           http.get({
             host: 'localhost',
             port: request.headers['port'],
@@ -41,23 +42,21 @@ function handleRequest(request, response) {
             const body = [];
             res.on('data', (chunk) => body.push(chunk));
             res.on('end', () => {
-
-              const rand = Math.floor(Math.random()*10000);
-              var result = 's3 random output ' + rand + ' ' + decodeURIComponent(body.toString());
-
-              span.setAttribute("service.output", decodeURIComponent(result));
+              span.setAttribute("service.output", decodeURIComponent(body.toString()));
               span.setAttribute("service.parentId", parent)
               span.setAttribute("service.input", input)
               
-              response.write(result);
+              response.write(decodeURIComponent(body.toString()));
               response.end();
               span.end();
             });  
           });
         }
         else {
-          let constRes = getDeterministicRes(resquest)
-          response.write(constRes);
+          span.setAttribute("service.output", decodeURIComponent(output));
+          span.setAttribute("service.parentId", parent)
+          span.setAttribute("service.input", input)
+          response.write(output);
           response.end();
           span.end();
         }
@@ -67,11 +66,19 @@ function handleRequest(request, response) {
 }
 
 function requiresReq(request){
-  return true
-}
+  let reqService = request.headers['caller']
+  let nextService = request.headers['url'] || ''
 
-function getDeterministicRes(request){
-  return ''
+  nextService = nextService.replace('/', '')
+  let input = request.headers['input'] || ''
+  let forwardingTable = cache.services.find(ser => ser.serviceName === reqService).forwardingTable || {}
+
+  if(forwardingTable !== {} && forwardingTable[nextService] !== undefined) {
+    let logs = forwardingTable[nextService].responses
+    let resp = logs.find(lg => lg.input === input)
+    return {fwdReq: !resp.deterministic, output: resp.output === undefined ? "" : resp.output}
+  }
+  return {fwdReq: true, output: ""}
 }
 
 startServer(8082);
