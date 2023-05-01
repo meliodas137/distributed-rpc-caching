@@ -2,9 +2,12 @@
 
 const http = require('http');
 const tracer = require('./tracer')('loadbalancer');
+let cache = require('./cacheInfo.json')
+let useRpcCaching = false
 
 /** Starts a HTTP server that receives requests on sample server port. */
 function startServer(port) {
+  if(cache !== {}) useRpcCaching = true 
   // Creates a server
   const server = http.createServer(handleRequest);
   // Starts the server
@@ -28,31 +31,47 @@ function handleRequest(request, response) {
         var parent = request.headers['parent-id']
         var input = request.headers['input']
         request.headers['parent-id'] = span.spanContext().traceId
-        http.get({
+        if(requiresReq(request)) {
+          http.get({
             host: 'localhost',
             port: request.headers['port'],
             path: request.headers['url'],
             headers: request.headers
-        }, (res) => {
-        const body = [];
-        res.on('data', (chunk) => body.push(chunk));
-        res.on('end', () => {
+            }, (res) => {
+            const body = [];
+            res.on('data', (chunk) => body.push(chunk));
+            res.on('end', () => {
 
-          const rand = Math.floor(Math.random()*10000);
-          var result = 's3 random output ' + rand + ' ' + decodeURIComponent(body.toString());
+              const rand = Math.floor(Math.random()*10000);
+              var result = 's3 random output ' + rand + ' ' + decodeURIComponent(body.toString());
 
-          span.setAttribute("service.output", decodeURIComponent(result));
-          span.setAttribute("service.parentId", parent)
-          span.setAttribute("service.input", input)
-          
-          response.write(result);
+              span.setAttribute("service.output", decodeURIComponent(result));
+              span.setAttribute("service.parentId", parent)
+              span.setAttribute("service.input", input)
+              
+              response.write(result);
+              response.end();
+              span.end();
+            });  
+          });
+        }
+        else {
+          let constRes = getDeterministicRes(resquest)
+          response.write(constRes);
           response.end();
           span.end();
-        });  
+        }
       });
-    });
-  }, 100 );
-});
+    }, 100 );
+  });
+}
+
+function requiresReq(request){
+  return true
+}
+
+function getDeterministicRes(request){
+  return ''
 }
 
 startServer(8082);
