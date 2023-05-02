@@ -3,6 +3,7 @@ from data_parser import InputParser
 from data_struct import Instruction
 from typing import Dict, List
 import json
+from prettytable import PrettyTable
 
 class ResponseVector:
     def __init__(self, input, output):
@@ -13,6 +14,7 @@ class ResponseVector:
     
 class ResponseTable:
     def __init__(self):
+        self.count = 0
         self.responses: List[ResponseVector] = []
 
     def addResponse(self, response: ResponseVector):
@@ -28,9 +30,11 @@ class Node:
     def addObservedResponse(self, serviceToCall: str, response: ResponseVector):
         if serviceToCall not in self.forwardingTable:
             responses = ResponseTable()
+            responses.count = 1
             responses.addResponse(response)
             self.forwardingTable[serviceToCall] = responses
         else:
+            self.forwardingTable[serviceToCall].count = self.forwardingTable[serviceToCall].count + 1
             for observedResponse in self.forwardingTable[serviceToCall].responses:
                 if observedResponse.input == response.input:
                     if observedResponse.output == response.output:
@@ -102,6 +106,34 @@ class InputComponents:
         self.__loadObservationsFromData()
         self.__processObservationCollection()
         self.nodeCaches = NodeCaches(self.nodes)
+
+    def printNodeRpcCountTable(self):
+        self.nodes.sort(key=lambda p: p.serviceName)
+        print("\n")
+        outertable = PrettyTable()
+        innerTables = []
+        serviceNames = []
+        totalInvocations = 0
+        for node in self.nodes:
+            childServiceNames = []
+            childServiceInvocations = []
+            for childService, childServiceResponses in node.forwardingTable.items():
+                if childService.lower() == self.DEFAULT_REQUEST.lower():
+                    continue
+                childServiceNames.append(childService)
+                childServiceInvocations.append(childServiceResponses.count)
+                totalInvocations  = totalInvocations + childServiceResponses.count
+            if len(childServiceNames) == 0:
+                continue
+            serviceNames.append(node.serviceName)
+            innerTable = PrettyTable()
+            innerTable.add_column("Called Service", childServiceNames)
+            innerTable.add_column("Invocations", childServiceInvocations)
+            innerTables.append(innerTable)
+        outertable.add_column("Service", serviceNames)
+        outertable.add_column("RPC Ttable", innerTables)
+        print(outertable)
+        print("Total Invocations: " + str(totalInvocations)  + "\n")
 
 
 class JsonEncoder(json.JSONEncoder):
